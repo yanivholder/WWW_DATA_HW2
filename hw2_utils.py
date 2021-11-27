@@ -61,34 +61,35 @@ async def handle_readable(request):
                            content_type=mime_dict[file_extension])
 
 
-
 def validate_admin():
-    pass
+    return True
+
 
 def handle_admin_request(request):
     if not validate_admin():
         return create_response(body="Attemp to by non-admin do admin action",
-                               status=401,
-                               content_type="text/html")
+                               status=401)
 
     try:
         if request.method == "POST":
             parse_dict = parse_qs(request.content)
-            username = [parse_dict[i] for i in parse_dict.keys() if 'username' in i][0][0]
-            pwd = [parse_dict[i] for i in parse_dict.keys() if 'username' in i][0][0]
+            username = parse_dict['username']
+            pwd = parse_dict['password']
+            # username = [parse_dict[i] for i in parse_dict.keys() if 'username' in i][0][0]
+            # pwd = [parse_dict[i] for i in parse_dict.keys() if 'password' in i][0][0]
             try:
                 db_util.db_create_new_user(username, pwd)
             except sqlite3.DatabaseError as e:
                 # tried to add existing username or null value as name or pwd
                 return create_response(body="Attemp by admin to register existing username or use null value as name or password",
-                                       status=403, content_type="text/html")
+                                       status=403)
 
         elif request.method == "DELETE":
             # from DELETE /users/<username> HTTP/1.1\... get the <username>
             username = os.path.basename(request.url)
             db_util.db_delete_user(username)
     except sqlite3.Error as e:
-        return create_response(body="DB error", status=500, content_type="text/html")
+        return create_response(body="DB error", status=500)
 
 
 def create_http_date():
