@@ -10,14 +10,17 @@ HOME_PAGE = "http://" + SERVER_HOST + f":{SERVER_PORT}/"
 
 
 async def handler(request):
-
-    resp = check_basic_validation(request)
-    if resp is not None:
-        return resp
-    if request.method == "GET":
-        return handle_get_request(request)
-    elif request.method == "POST" or request.method == "DELETE":
-        return handle_admin_request(request)
+    try:
+        resp = check_basic_validation(request)
+        if resp is not None:
+            return resp
+        if request.method == "GET":
+            return handle_get_request(request)
+        elif request.method == "POST" or request.method == "DELETE":
+            return handle_admin_request(request)
+    except:
+        return create_response(body="Some server error occurred",
+                               status=500)
 
 
 async def main():

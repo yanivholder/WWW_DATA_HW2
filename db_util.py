@@ -1,5 +1,7 @@
 import sqlite3
 
+# TODO: make those functions async
+
 
 def db_init():
     conn = sqlite3.connect('users.db')

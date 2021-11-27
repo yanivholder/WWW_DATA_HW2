@@ -1,4 +1,7 @@
+import asyncio
 from aiohttp import web
+import os
+import json
 
 import HTML_templates
 
@@ -8,18 +11,52 @@ LEGAL_REQUEST_METHODS = ["GET", "POST", "DELETE"]
 def check_basic_validation(request):
     if request.method not in LEGAL_REQUEST_METHODS:
         status = 400
-        return create_response(body=HTML_templates.create_html_for_error(title=f"{status} Illegal Method",
-                                                                         text="The request method is not legal. Our "
-                                                                              "server only handles GET, POST and "
-                                                                              "DELETE methods."),
-                               status=status,
-                               content_type="text/html"
-                               )
+        return create_response(body="The request method is not legal. Our "
+                                    "server only handles GET, POST and "
+                                    "DELETE methods.",
+                               status=status)
     # TODO: should we add cases?
 
 
-def handle_get_request(request):
+def validate_user(user, password):
     pass
+
+
+def handle_get_request(request):
+    if not validate_user(user="", password=""):
+        return create_response(body="The user authentication failed.",
+                               status=401)
+    # TODO: should I use url or rel_url?
+    if not os.path.isfile(request.url):
+        return create_response(body="The file in the URL not exists.",
+                               status=404)
+    # TODO: should I add / before the names?
+    if request.url in ["/config.py", "/users.db"]:
+        return create_response(body="You tried to get forbidden files!",
+                               status=403)
+    if request.url.endswith(".dp"):
+        resp = await handle_dp(request)
+    else:
+        resp = await handle_readable(request)
+    return resp
+
+
+async def handle_dp(request):
+    pass
+
+
+async def handle_readable(request):
+    with open('mime.json', 'r') as mime_file:
+        mime_dict = json.load(mime_file)
+    _, file_extension = os.path.splitext(request.url)
+    if file_extension not in mime_dict:
+        # TODO: check what to do in this case
+        pass
+    with open(request.url, 'rb') as readable_file:
+        readable_data = readable_file.read()
+    return create_response(body=readable_data,
+                           status=200,
+                           content_type=mime_dict[file_extension])
 
 
 def handle_admin_request(request):
@@ -37,11 +74,20 @@ def create_http_date():
     return format_date_time(stamp)
 
 
-def create_response(body, status, content_type):
+def create_response(body, status, content_type="text/html"):
+    if status in HTML_templates.ERROR_STATUS_DICT:
+        body = HTML_templates.create_html_for_error(text=body, status=status)
+        body.encode('utf-8')
+    else:
+        assert status == 200
+
     headers = {"charset": "utf-8",
                "Date": create_http_date(),
-               "Content-Type": content_type
+               "Content-Type": content_type,
+               # TODO: check if the content_length is automatically sent
+               # "Content-Length":
+               # TODO: Add a statement that the server closes the connection upon termination
                }
 
-    return web.Response(body=body.encode('utf-8'), status=status,
+    return web.Response(body=body, status=status,
                         headers=headers)
