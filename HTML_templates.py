@@ -1,27 +1,26 @@
 
-def create_html_with_error(error):
-    html = f"""
+HTML_ENDING = '''
     
-    {error}
-    
-    """
-    return html
+    </html>
+'''
 
 
-text = '''
-            <!DOCTYPE html>
-        <html>
-            <head>
-                <title> Document Title </title>
-            </head>
+def create_html_header(title):
+    return f'''
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title> {title} </title>
+        </head>
 
+'''
+
+
+def create_html_for_error(text, title):
+    html_body = f"""
             <body> 
-                <h1> An header </h1>
-                <p> The paragraph goes here </p>
-                <ul>
-                    <li> First item in a list </li>
-                    <li> Another item </li>
-                </ul>
+                <h1> OOPS an error occurred </h1>
+                <p> {text} </p>
             </body>
-        </html>
-    '''
+    """
+    return create_html_header(title) + html_body + HTML_ENDING

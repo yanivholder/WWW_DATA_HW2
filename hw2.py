@@ -24,7 +24,7 @@ async def main():
     server = web.Server(handler)
     runner = web.ServerRunner(server)
     await runner.setup()
-    site = web.TCPSite(runner, SERVER_HOST, SERVER_PORT)
+    site = web.TCPSite(runner, SERVER_HOST, SERVER_PORT, shutdown_timeout=config.timeout)
     await site.start()
 
     print(f"======= Serving on {HOME_PAGE} ======")
@@ -32,5 +32,5 @@ async def main():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(main())
+    main_task = asyncio.create_task(main())
     loop.run_forever()
