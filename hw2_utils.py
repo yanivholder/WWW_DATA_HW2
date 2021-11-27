@@ -1,9 +1,12 @@
 import asyncio
+import sqlite3
 from aiohttp import web
 import os
 import json
+from urllib.parse import parse_qs
 
 import HTML_templates
+import db_util
 
 LEGAL_REQUEST_METHODS = ["GET", "POST", "DELETE"]
 
@@ -44,7 +47,6 @@ def handle_get_request(request):
 async def handle_dp(request):
     pass
 
-
 async def handle_readable(request):
     with open('mime.json', 'r') as mime_file:
         mime_dict = json.load(mime_file)
@@ -59,8 +61,34 @@ async def handle_readable(request):
                            content_type=mime_dict[file_extension])
 
 
-def handle_admin_request(request):
+
+def validate_admin():
     pass
+
+def handle_admin_request(request):
+    if not validate_admin():
+        return create_response(body="Attemp to by non-admin do admin action",
+                               status=401,
+                               content_type="text/html")
+
+    try:
+        if request.method == "POST":
+            parse_dict = parse_qs(request.content)
+            username = [parse_dict[i] for i in parse_dict.keys() if 'username' in i][0][0]
+            pwd = [parse_dict[i] for i in parse_dict.keys() if 'username' in i][0][0]
+            try:
+                db_util.db_create_new_user(username, pwd)
+            except sqlite3.DatabaseError as e:
+                # tried to add existing username or null value as name or pwd
+                return create_response(body="Attemp by admin to register existing username or use null value as name or password",
+                                       status=403, content_type="text/html")
+
+        elif request.method == "DELETE":
+            # from DELETE /users/<username> HTTP/1.1\... get the <username>
+            username = os.path.basename(request.url)
+            db_util.db_delete_user(username)
+    except sqlite3.Error as e:
+        return create_response(body="DB error", status=500, content_type="text/html")
 
 
 def create_http_date():
