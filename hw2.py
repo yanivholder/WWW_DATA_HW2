@@ -1,34 +1,23 @@
-import socket
-import os
 import asyncio
 from aiohttp import web
 
-# Define socket host and port
+import config
+from hw2_utils import *
+
 SERVER_HOST = 'localhost'
-SERVER_PORT = 8888
+SERVER_PORT = config.port
 HOME_PAGE = "http://" + SERVER_HOST + f":{SERVER_PORT}/"
 
 
 async def handler(request):
-    text = '''
-            <!DOCTYPE html>
-        <html>
-            <head>
-                <title> Document Title </title>
-            </head>
 
-            <body> 
-                <h1> An header </h1>
-                <p> The paragraph goes here </p>
-                <ul>
-                    <li> First item in a list </li>
-                    <li> Another item </li>
-                </ul>
-            </body>
-        </html>
-    '''
-    return web.Response(body=text.encode('utf-8'), status=200,
-                        headers={"Content-Type": "text/html", "charset": "utf-8"})
+    resp = check_basic_validation(request)
+    if resp is not None:
+        return resp
+    if request.method == "GET":
+        return handle_get_request(request)
+    elif request.method == "POST" or request.method == "DELETE":
+        return handle_admin_request(request)
 
 
 async def main():
@@ -38,7 +27,7 @@ async def main():
     site = web.TCPSite(runner, SERVER_HOST, SERVER_PORT)
     await site.start()
 
-    print("======= Serving on http://127.0.0.1:8888/ ======")
+    print(f"======= Serving on {HOME_PAGE} ======")
 
 
 if __name__ == "__main__":
