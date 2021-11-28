@@ -22,10 +22,11 @@ def check_basic_validation(request):
 
 
 def validate_user(user, password):
-    pass
+    return True
 
 
-def handle_get_request(request):
+async def handle_get_request(request):
+    # TODO: change parameters
     if not validate_user(user="", password=""):
         return create_response(body="The user authentication failed.",
                                status=401)

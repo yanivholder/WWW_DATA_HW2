@@ -10,12 +10,14 @@ HOME_PAGE = "http://" + SERVER_HOST + f":{SERVER_PORT}/"
 
 
 async def handler(request):
+    print(request)
     try:
         resp = check_basic_validation(request)
         if resp is not None:
             return resp
         if request.method == "GET":
-            return handle_get_request(request)
+            resp = await handle_get_request(request)
+            return resp
         elif request.method == "POST" or request.method == "DELETE":
             return handle_admin_request(request)
     except:
@@ -35,5 +37,10 @@ async def main():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    main_task = asyncio.create_task(main())
+    future = asyncio.ensure_future(main())
     loop.run_forever()
+
+    # loop = asyncio.new_event_loop()
+    # asyncio.set_event_loop(loop)
+    # loop.run_forever()
+    # main_task = asyncio.create_task(main())
