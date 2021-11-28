@@ -3,6 +3,7 @@ from aiohttp import web
 
 import config
 from hw2_utils import *
+import validation_functions
 
 SERVER_HOST = 'localhost'
 SERVER_PORT = config.port
@@ -12,7 +13,7 @@ HOME_PAGE = "http://" + SERVER_HOST + f":{SERVER_PORT}/"
 async def handler(request):
     print(request)
     try:
-        resp = check_basic_validation(request)
+        resp = validation_functions.check_basic_validation(request)
         if resp is not None:
             return resp
         if request.method == "GET":
