@@ -23,11 +23,13 @@ def db_create_new_user(name, pwd):
 
 def db_delete_user(name):
     conn = sqlite3.connect('users.db')
-    conn.execute(f" DELETE \
+    cur = conn.cursor()
+    cur.execute(f" DELETE \
                     FROM Users \
                     WHERE username = '{name}';")
     conn.commit()
     conn.close()
+    return cur.rowcount
 
 
 def db_authenticate_user(name, pwd):
@@ -51,5 +53,9 @@ def db_get_all_users():
     cur.execute(f"SELECT * \
                     FROM Users;")
 
-    print([i for i in cur.fetchall()[0]])
+    print("***users in DB:")
+    print("username | password")
+    print("-------------------")
+    for user in cur.fetchall():
+        print(str(user[0]).ljust(9) + "| " + user[1])
     conn.close()

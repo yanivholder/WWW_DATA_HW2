@@ -103,13 +103,15 @@ async def handle_admin_request(request):
             print("DELETE")
 
             db_util.db_get_all_users()
-            print("x")
-            username = os.path.basename(str(request.url))
+            username = os.path.basename(get_rel_path(request))
             print(f"Removing username=({username}) from DB")
 
             # TODO: maybe add a more specific try and except here too
-            db_util.db_delete_user(username)
+            if db_util.db_delete_user(username) == 0:
+                return create_response(body="Attempt by admin to Delete non-existing username",
+                                       status=404)
     except sqlite3.Error as e:
+        print(e)
         return create_response(body="DB error", status=500)
 
 
