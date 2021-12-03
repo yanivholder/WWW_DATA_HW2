@@ -17,9 +17,7 @@ async def handler(request):
         if resp is not None:
             return resp
         if request.method == "GET":
-            print("before handle_get_request")
             resp = await handle_get_request(request)
-            print("after handle_get_request")
             return resp
         elif request.method == "POST" or request.method == "DELETE":
             return handle_admin_request(request)
