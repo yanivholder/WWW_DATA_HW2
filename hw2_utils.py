@@ -1,4 +1,5 @@
 import asyncio
+import aiofiles
 import sqlite3
 from aiohttp import web
 import os
@@ -48,13 +49,14 @@ async def handle_dp(request):
 
 
 async def get_readable_data(readable_file_path):
-    with open(readable_file_path, 'rb') as readable_file:
-        return readable_file.read()
+    async with aiofiles.open(readable_file_path, 'rb') as readable_file:
+        return await readable_file.read()
 
 
 async def get_json_data(file_path):
-    with open(file_path, 'r') as mime_file:
-        return json.load(mime_file)
+    async with aiofiles.open(file_path, 'r') as mime_file:
+        mime_data = await mime_file.read()
+    return json.loads(mime_data)
 
 
 async def handle_readable(rel_path):
@@ -70,7 +72,8 @@ async def handle_readable(rel_path):
                                    content_type=extension_dict["extension"])
     else:
         # TODO: check what to do in this case
-        print(f"{file_extension} not in mime.json")
+        return create_response(body="The file extension is not in mime.json",
+                               status=400)
 
 
 def handle_admin_request(request):
