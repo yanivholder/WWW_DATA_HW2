@@ -2,6 +2,7 @@ import asyncio
 from aiohttp import web
 
 import config
+import db_util
 from hw2_utils import *
 import validation_functions
 
@@ -20,13 +21,14 @@ async def handler(request):
             resp = await handle_get_request(request)
             return resp
         elif request.method == "POST" or request.method == "DELETE":
-            return handle_admin_request(request)
+            return await handle_admin_request(request)
     except:
         return create_response(body="Some server error occurred",
                                status=500)
 
 
 async def main():
+    db_util.db_init()
     server = web.Server(handler)
     runner = web.ServerRunner(server)
     await runner.setup()

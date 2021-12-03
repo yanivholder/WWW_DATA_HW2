@@ -76,7 +76,7 @@ async def handle_readable(rel_path):
                                status=400)
 
 
-def handle_admin_request(request):
+async def handle_admin_request(request):
     # TODO: add async support
     if not validation_functions.validate_admin():
         return create_response(body="Attempt by non-admin to do admin action",
@@ -84,9 +84,13 @@ def handle_admin_request(request):
 
     try:
         if request.method == "POST":
-            parse_dict = parse_qs(request.content)
-            username = parse_dict['username']
-            pwd = parse_dict['password']
+
+            parse_dict = parse_qs(await request.text())
+            username = parse_dict['username'][0]
+            pwd = parse_dict['password'][0]
+
+            print(f"Adding username:password=({username}:{pwd}) to DB")
+
             try:
                 db_util.db_create_new_user(username, pwd)
             except sqlite3.DatabaseError as e:
@@ -96,7 +100,13 @@ def handle_admin_request(request):
                                        status=403)
 
         elif request.method == "DELETE":
-            username = os.path.basename(request.url)
+            print("DELETE")
+
+            db_util.db_get_all_users()
+            print("x")
+            username = os.path.basename(str(request.url))
+            print(f"Removing username=({username}) from DB")
+
             # TODO: maybe add a more specific try and except here too
             db_util.db_delete_user(username)
     except sqlite3.Error as e:
