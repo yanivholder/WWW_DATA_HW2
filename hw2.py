@@ -17,7 +17,9 @@ async def handler(request):
         if resp is not None:
             return resp
         if request.method == "GET":
+            print("before handle_get_request")
             resp = await handle_get_request(request)
+            print("after handle_get_request")
             return resp
         elif request.method == "POST" or request.method == "DELETE":
             return handle_admin_request(request)
@@ -40,8 +42,3 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(main())
     loop.run_forever()
-
-    # loop = asyncio.new_event_loop()
-    # asyncio.set_event_loop(loop)
-    # loop.run_forever()
-    # main_task = asyncio.create_task(main())

@@ -1,3 +1,7 @@
+import os
+import asyncio
+import aiofiles.os
+
 import hw2_utils
 
 
@@ -17,3 +21,15 @@ def validate_user(user, password):
 
 def validate_admin():
     return True
+
+
+async def validate_file_exists(file_path):
+    # TODO: maybe add later aiofiles.os.path....
+    res = os.path.exists(file_path)
+    if res:
+        return res, hw2_utils.create_response(body="The request method is not legal. Our "
+                                                    "server only handles GET, POST and "
+                                                    "DELETE methods.",
+                                               status=400)
+    else:
+        return res, None
