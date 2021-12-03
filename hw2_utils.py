@@ -36,16 +36,34 @@ async def handle_get_request(request):
                                status=403)
 
     if rel_path.endswith(".dp"):
-        # resp = await handle_dp(request)
-        return create_response(body="DP!",
-                               status=403)
+        resp = await handle_dp(request)
     else:
         resp = await handle_readable(rel_path)
     return resp
 
 
 async def handle_dp(request):
-    pass
+    # TODO: erase this line
+    user = {"username": "Eilon", "authenticated": False}
+    file_data = await get_file_as_lines(get_rel_path(request))
+    file_data = [line.decode('utf-8') for line in file_data]
+
+    data = ' '.join(file_data)
+    start = data.find("{%")
+    while start >= 0:
+        end = data.find("%}")
+        to_calc = data[start + 2:end]
+        to_replace = data[start:end + 2]
+        data = data.replace(to_replace, str(eval(to_calc)), 1)
+        start = data.find("{%")
+
+    return create_response(body=data,
+                           status=200)
+
+
+async def get_file_as_lines(readable_file_path):
+    async with aiofiles.open(readable_file_path, 'rb') as readable_file:
+        return await readable_file.readlines()
 
 
 async def get_readable_data(readable_file_path):
@@ -64,20 +82,22 @@ async def handle_readable(rel_path):
     _, file_extension = os.path.splitext(rel_path)
     # delete the dot of the extension
     file_extension = file_extension[1:]
+    if not os.path.isfile(rel_path):
+        return create_response(body="The path is not for a file.",
+                               status=400)
+    readable_data = await get_readable_data(rel_path)
     for extension_dict in mime_dict["mime-mapping"]:
         if file_extension == extension_dict["extension"]:
-            readable_data = await get_readable_data(rel_path)
             return create_response(body=readable_data,
                                    status=200,
                                    content_type=extension_dict["extension"])
     else:
-        # TODO: check what to do in this case
-        return create_response(body="The file extension is not in mime.json",
-                               status=400)
+        return create_response(body=readable_data,
+                               status=200,
+                               content_type='text/plain')
 
 
 async def handle_admin_request(request):
-    # TODO: add async support
     if not validation_functions.validate_admin():
         return create_response(body="Attempt by non-admin to do admin action",
                                status=401)

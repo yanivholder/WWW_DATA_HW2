@@ -12,7 +12,6 @@ def check_basic_validation(request):
                                               "server only handles GET, POST and "
                                               "DELETE methods.",
                                          status=status)
-    # TODO: should we add cases?
 
 
 def validate_user(user, password):
