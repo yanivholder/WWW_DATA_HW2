@@ -1,5 +1,5 @@
 import asyncio
-
+import base64
 import aiofiles
 import sqlite3
 from aiohttp import web
@@ -33,37 +33,29 @@ async def handle_get_request(request):
                                status=403)
 
     if rel_path.endswith(".dp"):
-<<<<<<< HEAD
-        resp = await handle_dp(request)
-=======
-        # TODO: change parameters
-
-        valid_status = validation_functions.validate_user(request)
-        print("user verification status:", valid_status)
-        if valid_status is None:
-            return create_response(body="DB error while validating user",
-                                   status=500)
-        if not valid_status:
-            # TODO: produce response asking for credentials
+        name, pwd = parse_username_password_basic(request)
+        print(name, pwd)
+        if name is None:
             print("x")
             return create_response(body="The user authentication failed.",
-                                       status=401)
+                                   status=401)
 
-        else: # user validation is OK
-            pass
-        # resp = await handle_dp(request)
+        auth_status = validation_functions.authenticate_user(name, pwd)
+        if auth_status is None:
+            return create_response(body="DB error while authenticating user",
+                                   status=500)
+        else:
+            resp = await handle_dp(request, name, auth_status)
 
-        return create_response(body="DP!",
-                               status=403)
->>>>>>> 3b657b7 (authentication enabled)
     else:
         resp = await handle_readable(rel_path)
     return resp
 
 
-async def handle_dp(request):
+async def handle_dp(request, username, auth_status):
     # TODO: erase this line
-    user = {"username": "Eilon", "authenticated": False}
+    print(username, auth_status)
+    user = {"username": username, "authenticated": auth_status}
     file_data = await get_file_as_lines(get_rel_path(request))
     file_data = [line.decode('utf-8') for line in file_data]
 
@@ -78,6 +70,17 @@ async def handle_dp(request):
 
     return create_response(body=data,
                            status=200)
+
+
+def parse_username_password_basic(request):
+    msg_dict = {pair[0].decode('utf-8'): pair[1] for pair in request.message.raw_headers}
+    if 'Authorization' not in msg_dict.keys() or 'Basic' not in msg_dict['Authorization'].decode('utf-8'):
+        return None, None
+
+    user_pwd = base64.b64decode(str(msg_dict['Authorization'].decode('utf-8'))[6:]).decode('utf-8').split(':')
+    username = user_pwd[0]
+    password = user_pwd[1]
+    return username, password
 
 
 async def get_file_as_lines(readable_file_path):
@@ -117,8 +120,8 @@ async def handle_readable(rel_path):
 
 
 async def handle_admin_request(request):
-
-    if not validation_functions.validate_admin(request):
+    name, pswd = parse_username_password_basic(request)
+    if not validation_functions.authenticate_admin(name, pswd):
         return create_response(body="Attempt by non-admin to do admin action",
                                status=401)
 
