@@ -152,13 +152,13 @@ def create_response(body, status, content_type="text/html"):
         body.encode('utf-8')
     else:
         assert status == 200
-    headers = {"charset": "utf-8",
-               "Date": create_http_date(),
-               "Content-Type": content_type,
-               # TODO: check if the content_length is automatically sent
-               # "Content-Length":
-               # TODO: Add a statement that the server closes the connection upon termination
-               }
+    headers = {"Date": create_http_date(),
+               # TODO: check if this is correct
+               "Connection": "close"}
 
-    return web.Response(body=body, status=status,
-                        headers=headers)
+    return web.Response(
+        body=body,
+        status=status,
+        content_type=content_type,
+        charset="utf-8",
+        headers=headers)
