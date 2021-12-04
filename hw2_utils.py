@@ -22,7 +22,9 @@ def get_rel_path(request):
 
 async def handle_get_request(request):
     rel_path = get_rel_path(request)
-
+    if rel_path == '':
+        return create_response(body="Home page",
+                               status=200)
     exists = await validation_functions.validate_file_exists(rel_path)
     if not exists:
         return create_response(body="The file in the URL does not exists.",
@@ -34,11 +36,11 @@ async def handle_get_request(request):
 
     if rel_path.endswith(".dp"):
         name, pwd = parse_username_password_basic(request)
-        print(name, pwd)
         if name is None:
-            print("x")
-            return create_response(body="The user authentication failed.",
-                                   status=401)
+            # return create_response(body="The user authentication failed.",
+            #                        status=401)
+            #  by piazza answer https://piazza.com/class/kshihhjj74f28h?cid=112
+            return await handle_dp(request, 'None', False)
 
         auth_status = validation_functions.authenticate_user(name, pwd)
         if auth_status is None:
@@ -54,7 +56,6 @@ async def handle_get_request(request):
 
 async def handle_dp(request, username, auth_status):
     # TODO: erase this line
-    print(username, auth_status)
     user = {"username": username, "authenticated": auth_status}
     file_data = await get_file_as_lines(get_rel_path(request))
     file_data = [line.decode('utf-8') for line in file_data]
@@ -78,6 +79,9 @@ def parse_username_password_basic(request):
         return None, None
 
     user_pwd = base64.b64decode(str(msg_dict['Authorization'].decode('utf-8'))[6:]).decode('utf-8').split(':')
+    if user_pwd[0] == '':
+        return None, None
+
     username = user_pwd[0]
     password = user_pwd[1]
     return username, password
@@ -127,32 +131,41 @@ async def handle_admin_request(request):
 
     try:
         if request.method == "POST":
-
+            print("POST")
             parse_dict = parse_qs(await request.text())
             username = parse_dict['username'][0]
             pwd = parse_dict['password'][0]
-
             print(f"Adding username:password=({username}:{pwd}) to DB")
-
             try:
                 db_util.db_create_new_user(username, pwd)
+                db_util.db_get_all_users()
+
             except sqlite3.DatabaseError as e:
                 # tried to add existing username or null value as name or pwd
                 return create_response(body="Attempt by admin to register existing username or use null value"
                                             " as name or password",
                                        status=403)
+            return create_response(body=f"user {username} added successfully",
+                                   status=200)
 
         elif request.method == "DELETE":
             print("DELETE")
+            rel_path = get_rel_path(request)
+            username = os.path.basename(rel_path)
+            if not rel_path == 'users/'+username:
+                return create_response(body="DELETE command structure is illegal",
+                                       status=400)
 
-            db_util.db_get_all_users()
-            username = os.path.basename(get_rel_path(request))
             print(f"Removing username=({username}) from DB")
 
             # TODO: maybe add a more specific try and except here too
             if db_util.db_delete_user(username) == 0:
                 return create_response(body="Attempt by admin to Delete non-existing username",
                                        status=404)
+            db_util.db_get_all_users()
+            return create_response(body=f"user {username} deleted successfully",
+                                   status=200)
+
     except sqlite3.Error as e:
         print(e)
         return create_response(body="DB error", status=500)
