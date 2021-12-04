@@ -1,4 +1,5 @@
 import asyncio
+
 import aiofiles
 import sqlite3
 from aiohttp import web
@@ -21,10 +22,6 @@ def get_rel_path(request):
 
 async def handle_get_request(request):
     rel_path = get_rel_path(request)
-    # TODO: change parameters
-    if not validation_functions.validate_user(user="", password=""):
-        return create_response(body="The user authentication failed.",
-                               status=401)
 
     exists = await validation_functions.validate_file_exists(rel_path)
     if not exists:
@@ -36,7 +33,29 @@ async def handle_get_request(request):
                                status=403)
 
     if rel_path.endswith(".dp"):
+<<<<<<< HEAD
         resp = await handle_dp(request)
+=======
+        # TODO: change parameters
+
+        valid_status = validation_functions.validate_user(request)
+        print("user verification status:", valid_status)
+        if valid_status is None:
+            return create_response(body="DB error while validating user",
+                                   status=500)
+        if not valid_status:
+            # TODO: produce response asking for credentials
+            print("x")
+            return create_response(body="The user authentication failed.",
+                                       status=401)
+
+        else: # user validation is OK
+            pass
+        # resp = await handle_dp(request)
+
+        return create_response(body="DP!",
+                               status=403)
+>>>>>>> 3b657b7 (authentication enabled)
     else:
         resp = await handle_readable(rel_path)
     return resp
@@ -98,7 +117,8 @@ async def handle_readable(rel_path):
 
 
 async def handle_admin_request(request):
-    if not validation_functions.validate_admin():
+
+    if not validation_functions.validate_admin(request):
         return create_response(body="Attempt by non-admin to do admin action",
                                status=401)
 
@@ -155,6 +175,8 @@ def create_response(body, status, content_type="text/html"):
     headers = {"Date": create_http_date(),
                # TODO: check if this is correct
                "Connection": "close"}
+    if status == 401:
+        headers["WWW-Authenticate"] = "Basic realm = \"Access to the staging site\""
 
     return web.Response(
         body=body,

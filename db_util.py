@@ -45,6 +45,7 @@ def db_authenticate_user(name, pwd):
     conn.close()
     return ret
 
+
 def db_get_all_users():
     conn = sqlite3.connect('users.db')
     cur = conn.cursor()
