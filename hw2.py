@@ -11,7 +11,6 @@ SERVER_PORT = config.port
 HOME_PAGE = "http://" + SERVER_HOST + f":{SERVER_PORT}/"
 
 
-# TODO: check if HOME_PAGE request should be handled differently
 async def handler(request):
     print(request)
     try:
