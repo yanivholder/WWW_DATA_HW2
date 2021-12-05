@@ -12,8 +12,10 @@ HOME_PAGE = "http://" + SERVER_HOST + f":{SERVER_PORT}/"
 
 
 async def handler(request):
-    print(request)
     try:
+        print(request)
+        for header in request.headers:
+            print(f"{header}: {request.headers[header]}")
         resp = validation_functions.check_basic_validation(request)
         if resp is not None:
             return resp
@@ -22,13 +24,14 @@ async def handler(request):
             return resp
         elif request.method == "POST" or request.method == "DELETE":
             return await handle_admin_request(request)
-    except:
-        return create_response(body="Some server error occurred",
+    except Exception as e:
+        return create_response(body=f"Some server error occurred: {e}",
                                status=500)
 
 
 async def main():
-    db_util.db_init()
+    # TODO: check whether to erase the next line
+    # db_util.db_init()
     server = web.Server(handler)
     runner = web.ServerRunner(server)
     await runner.setup()

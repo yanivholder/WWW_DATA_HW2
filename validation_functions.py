@@ -39,4 +39,4 @@ def authenticate_user(name, pwd):
 
 async def validate_file_exists(file_path):
     # TODO: maybe add later aiofiles.os.path....
-    return os.path.exists(file_path)
+    return aiofiles.os.path.exists(file_path)
