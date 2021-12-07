@@ -30,7 +30,8 @@ async def handler(request):
 
 
 async def main():
-    # TODO: check whether to erase the next line
+    # The DB should already be initiated by:
+    # https://piazza.com/class/kshihhjj74f28h?cid=140
     # db_util.db_init()
     server = web.Server(handler)
     runner = web.ServerRunner(server)

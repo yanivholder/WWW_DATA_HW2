@@ -67,7 +67,11 @@ async def handle_dp(request, username, auth_status):
         end = data.find("%}")
         to_calc = data[start + 2:end]
         to_replace = data[start:end + 2]
-        data = data.replace(to_replace, str(eval(to_calc, {"user": user, "params": params})), 1)
+        try:
+            data = data.replace(to_replace, str(eval(to_calc, {"user": user, "params": params})), 1)
+        except Exception as e:
+            return create_response(body=f"An error inside dynamic page evaluation: {e}",
+                                   status=500)
         start = data.find("{%")
 
     return create_response(body=data,
@@ -133,10 +137,12 @@ async def handle_admin_request(request):
     try:
         rel_path = get_rel_path(request)
         if request.method == "POST":
-            # TODO: should we check the Content-Type header?
             print("POST")
             if rel_path != 'users':
                 return create_response(body="POST request with invalid URL",
+                                       status=400)
+            elif request.content_type != 'application/x-www-form-urlencoded':
+                return create_response(body="POST request with invalid content-type",
                                        status=400)
             parse_dict = parse_qs(await request.text())
             username = parse_dict['username'][0]
@@ -198,14 +204,11 @@ def create_response(body, status, content_type="text/html"):
         assert status == 200
     headers = {"Date": create_http_date()}
     if status == 401:
-        # TODO: check if this is correct
-        # TODO: check with browser
         headers["Connection"] = "keep-alive"
         headers["WWW-Authenticate"] = "Basic realm = \"Access to the staging site\""
     else:
         headers["Connection"] = "close"
 
-    # TODO: how to check it is HTTP/1.1
     return web.Response(
         body=body,
         status=status,
