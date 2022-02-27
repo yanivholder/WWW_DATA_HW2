@@ -25,7 +25,7 @@ async def handle_get_request(request):
     print(rel_path)
     if rel_path == '':
         return create_response(body="Home page",
-                               status=200)
+                               status=400)
     exists = await validation_functions.validate_file_exists(rel_path)
     if not exists:
         return create_response(body="The file in the URL does not exists.",
@@ -61,7 +61,7 @@ async def handle_dp(request, username, auth_status):
     file_data = await get_file_as_lines(get_rel_path(request))
     file_data = [line.decode('utf-8') for line in file_data]
 
-    data = ' '.join(file_data)
+    data = ''.join(file_data)
     start = data.find("{%")
     while start >= 0:
         end = data.find("%}")
@@ -121,7 +121,7 @@ async def handle_readable(rel_path):
         if file_extension == extension_dict["extension"]:
             return create_response(body=readable_data,
                                    status=200,
-                                   content_type=extension_dict["extension"])
+                                   content_type=extension_dict["mime-type"])
     else:
         return create_response(body=readable_data,
                                status=200,

@@ -15,7 +15,7 @@ def check_basic_validation(request):
         return hw2_utils.create_response(body="The request method is not legal. Our "
                                               "server only handles GET, POST and "
                                               "DELETE methods.",
-                                         status=400)
+                                         status=501)
     elif not hw2_utils.get_rel_path(request):
         return hw2_utils.create_response(body="The URL is empty",
                                          status=400)

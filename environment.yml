@@ -5,3 +5,4 @@ dependencies:
   - aiohttp=3.7.*
   - python=3.9.*
   - sqlite=3.36.*
+  - aiofiles
